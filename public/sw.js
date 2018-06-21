@@ -36,7 +36,9 @@ self.addEventListener('install', function (event) {
 
 self.addEventListener('activate', function (event) {
   console.log('[Service Worker] Activating Service Worker ....', event);
+  //Won't finish activation before we done
   event.waitUntil(
+    //getting all our subcaches
     caches.keys()
       .then(function (keyList) {
         return Promise.all(keyList.map(function (key) {
