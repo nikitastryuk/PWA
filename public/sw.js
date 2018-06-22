@@ -1,7 +1,7 @@
 
-var CACHE_STATIC_NAME = 'static-v4';
+var CACHE_STATIC_NAME = 'static-v1';
 //After user visited page
-var CACHE_DYNAMIC_NAME = 'dynamic-v2';
+var CACHE_DYNAMIC_NAME = 'dynamic-v1';
 
 self.addEventListener('install', function (event) {
   console.log('[Service Worker] Installing Service Worker ...', event);
@@ -71,7 +71,7 @@ self.addEventListener('fetch', function (event) {
                 //getting the cache that was opened
                 .then(function (cache) {
                   //putting a new resource(put just stores data not making a req like add )
-                  cache.put(event.request.url, res.clone());
+                  //cache.put(event.request.url, res.clone());
                   return res;
                 })
             })
