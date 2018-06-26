@@ -78,7 +78,7 @@ function configurePushSub() {
   })
   .then(function(sub){
     if(sub === null) {
-      var vapidPublickKey = 'BKzlZdhQpRvmupWySitnCzCVm1CcPqDEaoIQAYne-g0AGCTx_721j4MQQBbPfaxYzJLEB5H29IyQgO-1x09aqis';
+      var vapidPublickKey = 'BK4TPpskF6UQs7HfYPnEsLyaI3bb8j6isH2QUj69BjzzwVs_F9EcKwpYFMtgM3WhNN9YzXBcL1PCBaCNVnGNYx8';
       var convertedVapidPublicKey = urlBase64ToUint8Array(vapidPublickKey);
       //Create sub for the given browser on this device
       return reg.pushManager.subscribe({

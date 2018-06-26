@@ -2,9 +2,9 @@ importScripts('/src/js/idb.js');
 importScripts('/src/js/utility.js');
 
 var url = 'https://pwa-test-3d0de.firebaseio.com/posts';
-var CACHE_STATIC_NAME = 'static-v1';
+var CACHE_STATIC_NAME = 'static-v2';
 //After user visited page
-var CACHE_DYNAMIC_NAME = 'dynamic-v1';
+var CACHE_DYNAMIC_NAME = 'dynamic-v2';
 var STATIC_FILES = [
   //have to cache requests(/ is separate request)
   '/',
@@ -245,7 +245,7 @@ self.addEventListener('sync', function (event) {
       readAllData('sync-posts').then(function (data) {
         //looping all IndexDb data(every post)
         for (var dt of data) {
-          fetch('https://us-central1-pwa-test-3d0de.cloudfunctions.net/storePostData', {
+          fetch('http://127.0.0.1:3000/storePost', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
