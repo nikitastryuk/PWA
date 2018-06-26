@@ -2,9 +2,9 @@ importScripts('/src/js/idb.js');
 importScripts('/src/js/utility.js');
 
 var url = 'https://pwa-test-3d0de.firebaseio.com/posts';
-var CACHE_STATIC_NAME = 'static-v2';
+var CACHE_STATIC_NAME = 'static-v1';
 //After user visited page
-var CACHE_DYNAMIC_NAME = 'dynamic-v2';
+var CACHE_DYNAMIC_NAME = 'dynamic-v1';
 var STATIC_FILES = [
   //have to cache requests(/ is separate request)
   '/',
@@ -272,4 +272,56 @@ self.addEventListener('sync', function (event) {
       })
     );
   }
+})
+
+
+self.addEventListener('notificationclick', function (event) {
+  var notification = event.notification;
+  var action = event.action;
+  console.log('Notification: ' + notification);
+  if (action === 'confirm') {
+    notification.close();
+  }
+  else {
+    eveny.waitUntil(
+      clients.matchAll().then(function(clis){
+        var client = clis.find(function(c){
+          return c.visibilityStat = 'visible';
+        })
+        if(client != undefined) {
+          client.navigate(notification.data.url);
+          client.focus();
+        }
+        else {
+          clients.openWindow(notification.data.url);
+        }
+        notification.close();
+      })
+    )
+
+  }
+})
+
+self.addEventListener('notificationclose', function (event) {
+  console.log('Notification was closed', event);
+})
+
+self.addEventListener('push', function (event) {
+  console.log("Push notification recieved", event);
+  var data = { title: 'New!', content: 'Something!', openUrl: '/' };
+  if (event.data) {
+    data = JSON.parse(event.data.text());
+  }
+  var options = {
+    body: data.content,
+    icon: '/src/images/icons/app-icon-96x96.png',
+    badge: '/src/images/icons/app-icon-96x96.png',
+    data: {
+      url: data.openUrl
+    }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  )
 })

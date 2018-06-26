@@ -6,11 +6,21 @@ var form = document.querySelector('form');
 var titleInput = document.querySelector('#title');
 var locationInput = document.querySelector('#location');
 var url = 'https://pwa-test-3d0de.firebaseio.com/posts.json';
+var videoPlayer = document.querySelector('#player');
+var canvasElement = document.querySelector('#canvas');
+var captureButton = document.querySelector('#capture-btn');
+var imagePicker = document.querySelector('#image-picker');
+var imagePickerArea = document.querySelector('#pickk-image');
+
+function initializeMedia() {
+
+}
 
 function openCreatePostModal() {
  // createPostArea.style.display = 'block';
  // setTimeout(function() {
   createPostArea.style.transform = 'translateY(0)';
+  initializeMedia();
   //},1);
   if (deferredPrompt) {
     deferredPrompt.prompt();
@@ -186,6 +196,7 @@ form.addEventListener('submit', function(event) {
       //register sync task with sw
       return sw.sync.register('sync-new-posts');
       }).then(function(){
+        //3rd party lib for notification
         var snackbarContainer = document.querySelector('#confirmation-toast');
         var data = {message: 'Your post was saved for syncing!'};
         snackbarContainer.MaterialSnackbar.showSnackbar(data);
@@ -195,7 +206,7 @@ form.addEventListener('submit', function(event) {
     })
   }
   else {
-    sendData()
+    sendData();
   }
 
 })
