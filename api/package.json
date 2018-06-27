@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "web-push": "web-push"
   },
   "author": "",
   "license": "ISC",
@@ -13,9 +13,9 @@
     "cors": "^2.8.4",
     "express": "^4.16.3",
     "firebase-admin": "^5.12.1",
+    "formidable": "^1.2.1",
+    "uuid": "^3.3.0",
+    "uuid-v4": "^0.1.0",
     "web-push": "^3.3.2"
-  },
-  "scripts": {
-    "web-push": "web-push"
   }
 }

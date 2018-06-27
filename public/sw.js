@@ -2,15 +2,16 @@ importScripts('/src/js/idb.js');
 importScripts('/src/js/utility.js');
 
 var url = 'https://pwa-test-3d0de.firebaseio.com/posts';
-var CACHE_STATIC_NAME = 'static-v2';
+var CACHE_STATIC_NAME = 'static-v7';
 //After user visited page
-var CACHE_DYNAMIC_NAME = 'dynamic-v2';
+var CACHE_DYNAMIC_NAME = 'dynamic-v7';
 var STATIC_FILES = [
   //have to cache requests(/ is separate request)
   '/',
   '/offline.html',
   '/index.html',
   '/src/js/app.js',
+  '/src/js/utility.js',
   '/src/js/feed.js',
   //Pollys only need for old browsers
   '/src/js/promise.js',
@@ -30,14 +31,14 @@ self.addEventListener('install', function (event) {
   event.waitUntil(
     //Giving name to overall cache storage(caches)
     caches.open(CACHE_STATIC_NAME)
-      //getting the cache that was opened
-      .then(function (cache) {
-        console.log('[Service Worker] Precaching App Shell');
-        //Core page with all scripts/styles/fonts (req will be performed automaticly and stored with responds)
-        cache.addAll(
-          STATIC_FILES
-        );
-      })
+    //getting the cache that was opened
+    .then(function (cache) {
+      console.log('[Service Worker] Precaching App Shell');
+      //Core page with all scripts/styles/fonts (req will be performed automaticly and stored with responds)
+      cache.addAll(
+        STATIC_FILES
+      );
+    })
   )
 });
 
@@ -47,14 +48,14 @@ self.addEventListener('activate', function (event) {
   event.waitUntil(
     //getting all our subcaches
     caches.keys()
-      .then(function (keyList) {
-        return Promise.all(keyList.map(function (key) {
-          if (key !== CACHE_STATIC_NAME && key !== CACHE_DYNAMIC_NAME) {
-            console.log('[Service Worker] Removing old cache.', key);
-            return caches.delete(key);
-          }
-        }));
-      })
+    .then(function (keyList) {
+      return Promise.all(keyList.map(function (key) {
+        if (key !== CACHE_STATIC_NAME && key !== CACHE_DYNAMIC_NAME) {
+          console.log('[Service Worker] Removing old cache.', key);
+          return caches.delete(key);
+        }
+      }));
+    })
   );
   return self.clients.claim();
 });
@@ -101,33 +102,33 @@ self.addEventListener('fetch', function (event) {
 
       //STORING IN INDEXDB(NEW VERSION)
       fetch(event.request)
-        .then(function (res) {
-          var clonedRes = res.clone();
-          clearAllData('posts')
-            .then(function () {
-              return clonedRes.json()
-            })
-            .then(function (data) {
-              for (var key in data) {
-                // dbPromise.then(function (db) {
-                //   //Specify trans for store
-                //   var tx = db.transaction('posts', 'readwrite');
-                //   //Open IndexDb store
-                //   var store = tx.objectStore('posts');
-                //   store.put(data[key]);
-                //   //Needs to be returned(trans was completed)
-                //   return tx.copmlete;
-                // })
+      .then(function (res) {
+        var clonedRes = res.clone();
+        clearAllData('posts')
+          .then(function () {
+            return clonedRes.json()
+          })
+          .then(function (data) {
+            for (var key in data) {
+              // dbPromise.then(function (db) {
+              //   //Specify trans for store
+              //   var tx = db.transaction('posts', 'readwrite');
+              //   //Open IndexDb store
+              //   var store = tx.objectStore('posts');
+              //   store.put(data[key]);
+              //   //Needs to be returned(trans was completed)
+              //   return tx.copmlete;
+              // })
 
-                writeData('posts', data[key])
-                //JUST TESTING DELETE METHOD
-                // .then(function(){
-                //   deleteItemFromData('posts', key)
-                // })
-              }
-            })
-          return res;
-        })
+              writeData('posts', data[key])
+              //JUST TESTING DELETE METHOD
+              // .then(function(){
+              //   deleteItemFromData('posts', key)
+              // })
+            }
+          })
+        return res;
+      })
     );
     //for all STATIC_FILES routes taking from cache
     //checking if one of STATIC_FILES is part of req url
@@ -139,32 +140,32 @@ self.addEventListener('fetch', function (event) {
   } else {
     event.respondWith(
       caches.match(event.request)
-        .then(function (response) {
-          if (response) {
-            return response;
-            //if no data - performing a request and storing
-          } else {
-            return fetch(event.request)
-              .then(function (res) {
-                return caches.open(CACHE_DYNAMIC_NAME)
-                  .then(function (cache) {
-                    // trimCache(CACHE_DYNAMIC_NAME, 3);
-                    cache.put(event.request.url, res.clone());
-                    return res;
-                  })
-              })
-              //if nothing from network and cache returning offline.html (for text/html only cause we don't want show it for css etc)
-              .catch(function (err) {
-                return caches.open(CACHE_STATIC_NAME)
-                  .then(function (cache) {
+      .then(function (response) {
+        if (response) {
+          return response;
+          //if no data - performing a request and storing
+        } else {
+          return fetch(event.request)
+            .then(function (res) {
+              return caches.open(CACHE_DYNAMIC_NAME)
+                .then(function (cache) {
+                  // trimCache(CACHE_DYNAMIC_NAME, 3);
+                  cache.put(event.request.url, res.clone());
+                  return res;
+                })
+            })
+            //if nothing from network and cache returning offline.html (for text/html only cause we don't want show it for css etc)
+            .catch(function (err) {
+              return caches.open(CACHE_STATIC_NAME)
+                .then(function (cache) {
 
-                    if (event.request.headers.get('accept').includes('text/html')) {
-                      return cache.match('/offline.html');
-                    }
-                  });
-              });
-          }
-        })
+                  if (event.request.headers.get('accept').includes('text/html')) {
+                    return cache.match('/offline.html');
+                  }
+                });
+            });
+        }
+      })
     );
   }
 });
@@ -242,37 +243,37 @@ self.addEventListener('sync', function (event) {
   if (event.tag === 'sync-new-posts') {
     console.log('[Service Worker] Syncing new Posts');
     event.waitUntil(
-      readAllData('sync-posts').then(function (data) {
-        //looping all IndexDb data(every post)
+      readAllData('sync-posts')
+      .then(function (data) {
         for (var dt of data) {
+          var postData = new FormData();
+          postData.append('id', dt.id);
+          postData.append('title', dt.title);
+          postData.append('location', dt.location);
+          postData.append('file', dt.picture, dt.id);
+
           fetch('http://127.0.0.1:3000/storePost', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-              id: dt.id,
-              title: dt.title,
-              location: dt.location,
-              image: ''
+              method: 'POST',
+              body: postData
             })
-          }).then(function (res) {
-            //removing every post from store as we already fetched it
-            if (res.ok) {
-              res.json().then(function (resData) {
-                deleteItemFromData('sync-posts', resData.id);
-              });
-            }
-          }).catch(function (err) {
-            console.log("Error while sending data", err);
-          })
+            .then(function (res) {
+              console.log('Sent data', res);
+              if (res.ok) {
+                res.json()
+                  .then(function (resData) {
+                    deleteItemFromData('sync-posts', resData.id);
+                  });
+              }
+            })
+            .catch(function (err) {
+              console.log('Error while sending data', err);
+            });
         }
 
       })
     );
   }
-})
+});
 
 
 self.addEventListener('notificationclick', function (event) {
@@ -281,18 +282,16 @@ self.addEventListener('notificationclick', function (event) {
   console.log('Notification: ' + notification);
   if (action === 'confirm') {
     notification.close();
-  }
-  else {
-    eveny.waitUntil(
-      clients.matchAll().then(function(clis){
-        var client = clis.find(function(c){
+  } else {
+    event.waitUntil(
+      clients.matchAll().then(function (clis) {
+        var client = clis.find(function (c) {
           return c.visibilityStat = 'visible';
         })
-        if(client != undefined) {
+        if (client != undefined) {
           client.navigate(notification.data.url);
           client.focus();
-        }
-        else {
+        } else {
           clients.openWindow(notification.data.url);
         }
         notification.close();
@@ -308,7 +307,11 @@ self.addEventListener('notificationclose', function (event) {
 
 self.addEventListener('push', function (event) {
   console.log("Push notification recieved", event);
-  var data = { title: 'New!', content: 'Something!', openUrl: '/' };
+  var data = {
+    title: 'New!',
+    content: 'Something!',
+    openUrl: '/'
+  };
   if (event.data) {
     data = JSON.parse(event.data.text());
   }
