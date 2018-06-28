@@ -1,3 +1,4 @@
+//Vars
 var shareImageButton = document.querySelector('#share-image-button');
 var createPostArea = document.querySelector('#create-post');
 var closeCreatePostModalButton = document.querySelector('#close-create-post-modal-btn');
@@ -5,76 +6,68 @@ var sharedMomentsArea = document.querySelector('#shared-moments');
 var form = document.querySelector('form');
 var titleInput = document.querySelector('#title');
 var locationInput = document.querySelector('#location');
-var url = 'https://pwa-test-3d0de.firebaseio.com/posts.json';
 var videoPlayer = document.querySelector('#player');
 var canvasElement = document.querySelector('#canvas');
 var captureButton = document.querySelector('#capture-btn');
 var imagePicker = document.querySelector('#image-picker');
 var imagePickerArea = document.querySelector('#pick-image');
 var picture = null;
+//Db 
+var url = 'https://pwa-test-3d0de.firebaseio.com/posts.json';
+//to know from where will we take data(cache or network)
+var networkDataReceived = false;
 
+//Format to match folder create restrictions
 function setDateId() {
-  return new Date().toISOString().replace(/\W/g,'');
+  return new Date().toISOString().replace(/\W/g, '');
 }
 
+//Polly for browser that not support getUserMedia
 function initializeMedia() {
+  //if no mediaDevices create own one
   if (!('mediaDevices' in navigator)) {
     navigator.mediaDevices = {};
   }
 
+  //if no getUserMedia - taking deprecated implementations
   if (!('getUserMedia' in navigator.mediaDevices)) {
-    navigator.mediaDevices.getUserMedia = function(constraints) {
+    navigator.mediaDevices.getUserMedia = function (constraints) {
       var getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-
+      //if no - can't be used at all
       if (!getUserMedia) {
         return Promise.reject(new Error('getUserMedia is not implemented!'));
       }
 
-      return new Promise(function(resolve, reject) {
+      return new Promise(function (resolve, reject) {
+        //calling with correct context(navigator)
         getUserMedia.call(navigator, constraints, resolve, reject);
       });
     }
   }
 
-  navigator.mediaDevices.getUserMedia({video: true})
-    .then(function(stream) {
+  //Getting the video stream (video element)
+  navigator.mediaDevices.getUserMedia({
+      video: true
+    })
+    .then(function (stream) {
+      //setting the stream
       videoPlayer.srcObject = stream;
       videoPlayer.style.display = 'block';
     })
-    .catch(function(err) {
+    .catch(function (err) {
       imagePickerArea.style.display = 'block';
     });
 }
 
-captureButton.addEventListener('click', function(event) {
-  canvasElement.style.display = 'block';
-  videoPlayer.style.display = 'none';
-  captureButton.style.display = 'none';
-  var context = canvasElement.getContext('2d');
-  context.drawImage(videoPlayer, 0, 0, canvas.width, videoPlayer.videoHeight / (videoPlayer.videoWidth / canvas.width));
-  videoPlayer.srcObject.getVideoTracks().forEach(function(track) {
-    track.stop();
-  });
-  picture = dataURItoBlob(canvasElement.toDataURL());
-});
-
-imagePicker.addEventListener('change', function(event) {
-  picture = event.target.files[0];
-});
-
-
+//Open modal wtih animation, initMedia, banner
 function openCreatePostModal() {
-  // createPostArea.style.display = 'block';
-  // setTimeout(function() {
   createPostArea.style.transform = 'translateY(0)';
   initializeMedia();
-  //},1);
+  //Add to home screen banner shows after clicking add post modal
   if (deferredPrompt) {
     deferredPrompt.prompt();
-
     deferredPrompt.userChoice.then(function (choiceResult) {
       console.log(choiceResult.outcome);
-
       if (choiceResult.outcome === 'dismissed') {
         console.log('User cancelled installation');
       } else {
@@ -95,6 +88,7 @@ function openCreatePostModal() {
   // }
 }
 
+//Close modal with animation and disabling elements
 function closeCreatePostModal() {
   createPostArea.style.transform = 'translateY(100vh)';
   imagePickerArea.style.display = 'none';
@@ -103,10 +97,8 @@ function closeCreatePostModal() {
   // createPostArea.style.display = 'none';
 }
 
-shareImageButton.addEventListener('click', openCreatePostModal);
 
-closeCreatePostModalButton.addEventListener('click', closeCreatePostModal);
-
+//Prevent dublicates
 function clearCards() {
   while (sharedMomentsArea.hasChildNodes()) {
     sharedMomentsArea.removeChild(sharedMomentsArea.lastChild);
@@ -140,6 +132,7 @@ function createCard(data) {
   sharedMomentsArea.appendChild(cardWrapper);
 }
 
+
 function sendData() {
   var id = setDateId();
   var postData = new FormData();
@@ -149,15 +142,16 @@ function sendData() {
   postData.append('file', picture, id + '.png');
 
   fetch('http://127.0.0.1:3000/storePost', {
-    method: 'POST',
-    body: postData
-  })
-    .then(function(res) {
+      method: 'POST',
+      body: postData
+    })
+    .then(function (res) {
       console.log('Sent data', res);
       updateUI();
     })
 }
 
+//Redraw new cards
 function updateUI(data) {
   clearCards();
   for (var i = 0; i < data.length; i++) {
@@ -179,9 +173,6 @@ function updateUI(data) {
 
 
 
-//to know from where will we take data
-var networkDataReceived = false;
-
 fetch(url)
   .then(function (res) {
     return res.json();
@@ -196,7 +187,17 @@ fetch(url)
     updateUI(dataArray);
   });
 
-//CHANGING TO INDEXEDDB
+if ('indexedDB' in window) {
+  readAllData('posts').then(function (data) {
+    if (!networkDataReceived) {
+      console.log('From cache', data);
+      updateUI(data);
+    }
+  })
+}
+
+
+//CHANGED TO INDEXEDDB(Cache version)
 // if ('caches' in window) {
 //   caches.match(url)
 //     .then(function(response) {
@@ -216,15 +217,27 @@ fetch(url)
 //     });
 // }
 
-if ('indexedDB' in window) {
-  readAllData('posts').then(function (data) {
-    if (!networkDataReceived) {
-      console.log('From cache', data);
-      updateUI(data);
-    }
-  })
-}
 
+//Event listeners
+shareImageButton.addEventListener('click', openCreatePostModal);
+
+closeCreatePostModalButton.addEventListener('click', closeCreatePostModal);
+
+captureButton.addEventListener('click', function (event) {
+  canvasElement.style.display = 'block';
+  videoPlayer.style.display = 'none';
+  captureButton.style.display = 'none';
+  var context = canvasElement.getContext('2d');
+  context.drawImage(videoPlayer, 0, 0, canvas.width, videoPlayer.videoHeight / (videoPlayer.videoWidth / canvas.width));
+  videoPlayer.srcObject.getVideoTracks().forEach(function (track) {
+    track.stop();
+  });
+  picture = dataURItoBlob(canvasElement.toDataURL());
+});
+
+imagePicker.addEventListener('change', function (event) {
+  picture = event.target.files[0];
+});
 
 form.addEventListener('submit', function (event) {
   event.preventDefault();
@@ -260,5 +273,4 @@ form.addEventListener('submit', function (event) {
   } else {
     sendData();
   }
-
 })

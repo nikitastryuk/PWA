@@ -2,9 +2,9 @@ importScripts('/src/js/idb.js');
 importScripts('/src/js/utility.js');
 
 var url = 'https://pwa-test-3d0de.firebaseio.com/posts';
-var CACHE_STATIC_NAME = 'static-v7';
+var CACHE_STATIC_NAME = 'static-v1';
 //After user visited page
-var CACHE_DYNAMIC_NAME = 'dynamic-v7';
+var CACHE_DYNAMIC_NAME = 'dynamic-v1';
 var STATIC_FILES = [
   //have to cache requests(/ is separate request)
   '/',
