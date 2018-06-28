@@ -2,9 +2,9 @@ importScripts('/src/js/idb.js');
 importScripts('/src/js/utility.js');
 
 var url = 'https://pwa-test-3d0de.firebaseio.com/posts';
-var CACHE_STATIC_NAME = 'static-v1';
+var CACHE_STATIC_NAME = 'static-v22';
 //After user visited page
-var CACHE_DYNAMIC_NAME = 'dynamic-v1';
+var CACHE_DYNAMIC_NAME = 'dynamic-v22';
 var STATIC_FILES = [
   //have to cache requests(/ is separate request)
   '/',
@@ -251,7 +251,8 @@ self.addEventListener('sync', function (event) {
           postData.append('title', dt.title);
           postData.append('location', dt.location);
           postData.append('file', dt.picture, dt.id);
-
+          postData.append('rawLocationLat', dt.rawLocation.lat);
+          postData.append('rawLocationLng', dt.rawLocation.lng);
           fetch('http://127.0.0.1:3000/storePost', {
               method: 'POST',
               body: postData

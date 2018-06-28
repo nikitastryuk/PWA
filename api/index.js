@@ -54,12 +54,16 @@ app.post('/storePost', (request, response) => {
               }
             }, function (uploadError, file) {
               if (!uploadError) {
-
+                console.log(fields);
                 admin.database().ref('posts').push({
                     id: fields.id,
                     title: fields.title,
                     location: fields.location,
-                    image: 'https://firebasestorage.googleapis.com/v0/b/' + bucket.name + '/o/' + encodeURIComponent(file.name) + '?alt=media&token=' + uuid
+                    image: 'https://firebasestorage.googleapis.com/v0/b/' + bucket.name + '/o/' + encodeURIComponent(file.name) + '?alt=media&token=' + uuid,
+                    rawLocation: {
+                      lat: fields.rawLocationLat,
+                      lnd: fields.rawLocationLng
+                    }
                   })
                   .then(function () {
                     webpush.setVapidDetails('mailto:nikitastryuk@gmail.com', 'BK4TPpskF6UQs7HfYPnEsLyaI3bb8j6isH2QUj69BjzzwVs_F9EcKwpYFMtgM3WhNN9YzXBcL1PCBaCNVnGNYx8', 'BUQq7l6sR783EenYC-90-tqILoGVmvxWnJuAOOQEPC0');
