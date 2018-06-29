@@ -35,6 +35,7 @@
 .main-image {
   max-width: 100%;
   margin: auto;
+  max-height: 60vh;
   display: block;
 }
 
